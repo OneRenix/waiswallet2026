@@ -10,10 +10,10 @@ Wais Wallet is a strategic financial management system designed for the "Wais" (
 - Google API Key (for Gemini 2.0 Flash)
 
 ### 2. Environment Setup
-Create a `.env.local` file in the root directory:
+Create a `.env` file in the root directory:
 ```env
 GOOGLE_API_KEY=your_api_key_here
-DATABASE_PATH=app/data/waiswallet.db
+OPIK_KEY=your_opik_key_here
 ```
 
 ### 3. Initialize the Database

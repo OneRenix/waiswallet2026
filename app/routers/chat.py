@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlite3 import Connection
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception
 from ..db.connection import get_db_session
-from ..agents.pilot import strategic_pilot, PilotDeps
+from ..agents.pilot import strategic_pilot, guardrail_agent, PilotDeps
 
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
 
@@ -21,8 +21,25 @@ async def run_agent_with_retry(query: str, deps: PilotDeps):
 
 @router.post("/")
 async def chat_with_pilot(query: str, db: Connection = Depends(get_db_session)):
-    # 1. Load the "Financial Brain" context
-    with open("app/data/database.md", "r") as f:
+    # 0. Fast Intent Check (Guardrail)
+    try:
+        classifier_result = await guardrail_agent.run(query)
+        # Use .output for Pydantic AI AgentRunResult
+        classifier_output = str(getattr(classifier_result, 'output', classifier_result))
+        
+        if "OFF-TOPIC" in classifier_output.upper():
+            return {
+                "response": "I'm sorry, but I can only assist with personal finance, budgeting, and savings-related questions. How can I help you with your wealth today?",
+                "tool_calls": [],
+                "usage": classifier_result.usage()
+            }
+    except Exception as e:
+        print(f"Guardrail check failed: {e}")
+        # Fail safe: continue to main agent if guardrail has an issue
+        pass
+
+    # 1. Load the "Financial Brain" context (Compact Version)
+    with open("app/data/database_compact.md", "r") as f:
         rules = f.read()
     
     # 2. Package Dependencies
@@ -32,8 +49,8 @@ async def chat_with_pilot(query: str, db: Connection = Depends(get_db_session)):
     try:
         result = await run_agent_with_retry(query, deps)
         
-        # Robust extraction of response text
-        response_text = result.data if hasattr(result, 'data') else str(result)
+        # Robust extraction of response text using .output
+        response_text = result.output if hasattr(result, 'output') else str(result)
         
         # If it somehow still has the AgentRunResult wrapper, strip it
         if isinstance(response_text, str) and response_text.startswith("AgentRunResult("):

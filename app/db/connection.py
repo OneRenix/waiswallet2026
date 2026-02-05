@@ -3,9 +3,9 @@ import os
 from contextlib import contextmanager
 from dotenv import load_dotenv
 
-# Load .env.local
-# Load .env.local
+# Load environment variables
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+load_dotenv(os.path.join(project_root, ".env"))
 load_dotenv(os.path.join(project_root, ".env.local"))
 
 def _get_db_logic(readonly=False):

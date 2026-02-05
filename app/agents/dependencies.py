@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 import sqlite3
+import re
 from pydantic_ai import RunContext
 
 @dataclass
 class PilotDeps:
     db: sqlite3.Connection
-    system_rules: str  # Content of database.md
+    system_rules: str  # Content of database.md (Now database_compact.md)
 
 # ==========================================================
 # RE-ACT TOOLS: These are the "hands" of the agent
@@ -103,17 +104,38 @@ async def run_sql_query(ctx: RunContext[PilotDeps], query: str):
     1. Only SELECT statements are allowed.
     2. Do NOT modify data (NO INSERT, UPDATE, DELETE, DROP).
     """
-    # Security check: Basic protection against highly destructive operations
-    forbidden_keywords = ["DELETE", "DROP", "ALTER", "TRUNCATE"]
+    # Security check: Basic protection against destructive and system operations
+    forbidden_keywords = [
+        "DELETE", "DROP", "ALTER", "TRUNCATE", "REPLACE",
+        "PRAGMA", "ATTACH", "DETACH", "COMMIT", "ROLLBACK", "VACUUM"
+    ]
     normalized_query = query.strip().upper()
     
     if any(kw in normalized_query for kw in forbidden_keywords):
         print(f"⚠️ [Security Blocked] run_sql_query | SQL: {query}")
-        return {"error": "Security Alert: Destructive operations (DELETE, DROP, etc.) are not allowed."}
+        return {"error": f"Security Alert: The keyword you used is not allowed for safety reasons."}
+    
+    # Enforce LIMIT 50 for safety and token efficiency
+    if "LIMIT" not in normalized_query:
+        query = query.rstrip(';') + " LIMIT 50"
+    else:
+        # Check if the existing limit is too high
+        match = re.search(r'LIMIT\s+(\d+)', normalized_query)
+        if match and int(match.group(1)) > 50:
+            query = re.sub(r'LIMIT\s+\d+', 'LIMIT 50', query, flags=re.IGNORECASE)
         
     print(f"🔍 [Tool Call] run_sql_query | SQL: {query}")
     try:
         cursor = ctx.deps.db.cursor()
+        
+        # Fast Validation: Verify syntax and logic using EXPLAIN
+        try:
+            cursor.execute(f"EXPLAIN QUERY PLAN {query}")
+        except sqlite3.Error as e:
+            print(f"⚠️ [SQL Validation Failed] Query: {query} | Error: {e}")
+            return {"error": f"SQL Validation Error: {str(e)}. Please check your table/column names and syntax."}
+
+        # Actual Execution
         cursor.execute(query)
         rows = cursor.fetchall()
         
@@ -125,3 +147,49 @@ async def run_sql_query(ctx: RunContext[PilotDeps], query: str):
         return [dict(row) for row in rows]
     except Exception as e:
         return {"error": f"Database error: {str(e)}"}
+
+async def get_table_schema(ctx: RunContext[PilotDeps], table_name: str):
+    """
+    Retrieves the detailed schema (columns, types, constraints) for a specific table.
+    Use this BEFORE writing a SQL query to ensure your column names are correct.
+    """
+    # Security: basic name validation
+    if not re.match(r'^\w+$', table_name):
+        return {"error": "Invalid table name format."}
+        
+    print(f"🔍 [Tool Call] get_table_schema | Table: {table_name}")
+    try:
+        cursor = ctx.deps.db.cursor()
+        
+        # 1. Get column info
+        cursor.execute(f"PRAGMA table_info({table_name});")
+        columns = [dict(row) for row in cursor.fetchall()]
+        
+        if not columns:
+            return {"error": f"Table '{table_name}' not found."}
+            
+        # 2. Get foreign key info
+        cursor.execute(f"PRAGMA foreign_key_list({table_name});")
+        fks = [dict(row) for row in cursor.fetchall()]
+        
+        return {
+            "table": table_name,
+            "columns": columns,
+            "foreign_keys": fks
+        }
+    except Exception as e:
+        return {"error": f"Error fetching schema: {str(e)}"}
+
+async def get_recommendation_history(ctx: RunContext[PilotDeps]):
+    """
+    Retrieves the history of strategic recommendations and their current statuses.
+    Use this to avoid repeating recommendations that the user has already dismissed, snoozed, or completed.
+    """
+    query = "SELECT title, message, status, urgency_level, created_at FROM strategic_recommendations ORDER BY created_at DESC LIMIT 10"
+    print(f"🔍 [Tool Call] get_recommendation_history")
+    try:
+        cursor = ctx.deps.db.cursor()
+        cursor.execute(query)
+        return [dict(row) for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": f"Error fetching history: {str(e)}"}

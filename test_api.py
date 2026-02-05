@@ -1,3 +1,19 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables BEFORE importing app code
+env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(env_path)
+
+# Verify API key is loaded
+if not os.getenv("GEMINI_API_KEY"):
+    # Try common alternatives or check if it's named differently
+    apiKey = os.getenv("GOOGLE_API_KEY")
+    if apiKey:
+        os.environ["GEMINI_API_KEY"] = apiKey
+    else:
+        print(f"⚠️ Warning: GEMINI_API_KEY not found in {env_path}")
+
 import asyncio
 from fastapi.testclient import TestClient
 from app.main import app
@@ -33,7 +49,8 @@ def test_chat(query: str):
 if __name__ == "__main__":
     # Sample test queries
     #test_chat("how much is my balance in my EastWest Visa wallet?")
-    test_chat("How much is my credit in my Amore wallet?")
+    #test_chat("How much is my credit in my Amore wallet?")
+    test_chat("What are my current recurring expenses?")
     #test_chat("Check my goal progress for the Emergency Fund.")
     #test_chat("How much do I have in savings?")
     #test_chat("What is my current balance across all wallets?")

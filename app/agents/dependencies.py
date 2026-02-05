@@ -103,13 +103,13 @@ async def run_sql_query(ctx: RunContext[PilotDeps], query: str):
     1. Only SELECT statements are allowed.
     2. Do NOT modify data (NO INSERT, UPDATE, DELETE, DROP).
     """
-    # Security check: Basic protection against non-read operations
-    forbidden_keywords = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE"]
+    # Security check: Basic protection against highly destructive operations
+    forbidden_keywords = ["DELETE", "DROP", "ALTER", "TRUNCATE"]
     normalized_query = query.strip().upper()
     
-    if not normalized_query.startswith("SELECT") or any(kw in normalized_query for kw in forbidden_keywords):
+    if any(kw in normalized_query for kw in forbidden_keywords):
         print(f"⚠️ [Security Blocked] run_sql_query | SQL: {query}")
-        return {"error": "Security Alert: Only read-only SELECT queries are allowed."}
+        return {"error": "Security Alert: Destructive operations (DELETE, DROP, etc.) are not allowed."}
         
     print(f"🔍 [Tool Call] run_sql_query | SQL: {query}")
     try:

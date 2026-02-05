@@ -1,6 +1,6 @@
 # 🧠 Wais Wallet: AI-Powered Financial Pilot
 
-Wais Wallet is a strategic financial management system designed for the "Wais" (smart) user. It combines a structured SQLite database with a Gemini-powered AI agent to provide proactive financial advice, cashback optimization, and automated expense tracking.
+Wais Wallet is a strategic financial management system designed for the "Wais" (smart) user. A Gemini-powered AI agent to provide proactive financial assistance, cashback optimization, and automated expense tracking.
 
 ## 🚀 Getting Started
 

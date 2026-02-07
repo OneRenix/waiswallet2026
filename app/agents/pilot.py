@@ -8,7 +8,7 @@ from .dependencies import (
 )
 
 # Initialize the Google Gemini 2.0 Flash Model
-model = GoogleModel('gemini-3-flash-preview')
+model = GoogleModel('gemini-2.5-flash')
 
 strategic_pilot = Agent(
     model,

@@ -207,7 +207,7 @@ export const renderDashboard = () => {
 
         return `
                     <div class="relative bg-white p-4 rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all cursor-pointer">
-                      <div class="absolute left-0 top-0 bottom-0 w-1.5 ${c.color}"></div>
+                      <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background-color: ${c.color}"></div>
                       <div class="pl-3">
                          <div class="flex justify-between items-start mb-4">
                             <div>

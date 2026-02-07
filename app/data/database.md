@@ -18,6 +18,7 @@ You are the **Strategic Pilot** for Wais W. You manage financial logic through a
 | :--- | :--- | :--- | :--- |
 | 1 | `categories` | Core Master Data | The classification engine. Maps every cent spent to a specific life department (e.g., Groceries, Transport) to enable budget tracking. |
 | 2 | `wallets` | Core Master Data | The liquidity layer. Tracks the physical or digital location of money. It distinguishes between "Owned Money" (Debit/Cash) and "Borrowed Money" (Credit). |
+| 2b | `wallet_benefits` | Core Master Data | The benefits optimizer. Stores category-specific cashback rates (credit cards) or interest rates (debit cards) with support for time-bound promotions. |
 | 3 | `income_sources` | Core Master Data | The inflow registry. Tracks where money comes from to help the AI project future savings capacity. |
 | 4 | `transaction_headers` | Transactional | The "Financial Event" record. It captures the who, where, and when of a purchase. It acts as the parent for all line items. |
 | 5 | `transaction_details` | Transactional | The "Intelligence" record. It breaks down headers into granular categories or spreads an installment across future months using `billing_date`. |
@@ -49,7 +50,8 @@ You are the **Strategic Pilot** for Wais W. You manage financial logic through a
 ### Table 2: `wallets`
 * **`id`** (INTEGER, PK): Unique identifier.
 * **`name`** (TEXT): Display name (e.g., `Amore Cashback`).
-* **`provider`** (TEXT): The bank/issuer (e.g., `BPI`).
+* **`provider_id`** (INTEGER, FK): References `providers.id`.
+* **`color`** (TEXT): User-selected hex color code (e.g., `#3b82f6`).
 * **`type`** (TEXT): `credit`, `debit`, or `cash`.
 * **`balance`** (REAL): Current debt (for Credit) or Cash (for Debit/Cash).
 * **`available_credit`** (REAL): Total swiping power remaining (Limit minus total debt).
@@ -58,9 +60,31 @@ You are the **Strategic Pilot** for Wais W. You manage financial logic through a
 * **`due_day`** (INTEGER): Payment deadline day (e.g., `15`).
 * **`monthly_cashback_limit`** (REAL): Max rewards per month (e.g., `1500.0`).
 * **`cashback_ytd`** (REAL): Year-to-date total rewards earned.
+* **`benefits`** (TEXT): **DEPRECATED.** Use `wallet_benefits` table instead. Legacy JSON string of category multipliers.
 * **`version`** (INTEGER): Incremental counter for optimistic locking.
 * **`created_at`** (TIMESTAMP): Record creation time.
 * **`updated_at`** (TIMESTAMP): Last modification time.
+
+---
+
+### Table 2b: `wallet_benefits`
+* **`id`** (INTEGER, PK): Unique identifier.
+* **`wallet_id`** (INTEGER, FK): References `wallets.id`. Cascade deletes when wallet is removed.
+* **`category_id`** (INTEGER, FK): References `categories.id`. Links benefit to specific spending category.
+* **`benefit_type`** (TEXT): Type of benefit - `cashback` for credit cards, `interest` for debit cards.
+* **`rate`** (REAL): Percentage rate. For credit cards: cashback % (e.g., `4.0` = 4%). For debit cards: interest rate % (e.g., `2.5` = 2.5% APY).
+* **`is_active`** (BOOLEAN): Whether this benefit is currently active. Allows temporary disabling without deletion.
+* **`effective_from`** (TEXT): ISO8601 date when benefit starts. NULL = active immediately.
+* **`effective_until`** (TEXT): ISO8601 date when benefit ends. NULL = indefinite.
+* **`notes`** (TEXT): Optional details about promo conditions, restrictions, etc.
+* **`created_at`** (TIMESTAMP): Record creation time.
+* **`updated_at`** (TIMESTAMP): Last modification time.
+
+**Strategic Usage:**
+- **Credit Cards**: Use `benefit_type='cashback'` to store category-specific reward rates.
+- **Debit Cards**: Use `benefit_type='interest'` to store category-specific interest rates (e.g., higher rates for savings categories).
+- **Time-Bound Promos**: Set `effective_from` and `effective_until` for limited-time offers.
+- **Card Recommendations**: Query active benefits WHERE `is_active=1` AND date is within effective range to find optimal card for each category.
 
 ---
 
@@ -241,7 +265,7 @@ You are the **Strategic Pilot** for Wais W. You manage financial logic through a
 ## 6. Operational Logic (Agent Knowledge)
 
 - **The Truth Check:** Net Worth = (Sum of Debit/Cash `balance`) - (Sum of Credit `balance`).
-- **Optimization:** Recommend cards based on `category_id` reward rates unless the card `is_capped`.
+- **Optimization:** Recommend cards based on `wallet_benefits` table. Query for `max(rate)` WHERE `benefit_type='cashback'` AND `is_active=1` AND `category_id` matches transaction AND date is within effective range. Exclude cards where `is_capped=1` in `wallet_cashback_history`.
 - **The "No-Pressure" Rule:** For any recommendation snoozed by the user, update `remind_at` to `+3 days` (Nudge) or `+5 days` (Review).
 
 ## 7. Metadata Mapping

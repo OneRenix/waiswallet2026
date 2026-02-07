@@ -184,8 +184,10 @@ async def get_recommendation_history(ctx: RunContext[PilotDeps]):
     """
     Retrieves the history of strategic recommendations and their current statuses.
     Use this to avoid repeating recommendations that the user has already dismissed, snoozed, or completed.
+    Note: Statuses are 'pending', 'dismissed', 'completed' (acted_upon).
+    If a recommendation was dismissed > 30 days ago, it may be re-evaluated for financial health.
     """
-    query = "SELECT title, message, status, urgency_level, created_at FROM strategic_recommendations ORDER BY created_at DESC LIMIT 10"
+    query = "SELECT title, message, status, urgency_level, created_at, updated_at FROM strategic_recommendations ORDER BY created_at DESC LIMIT 15"
     print(f"🔍 [Tool Call] get_recommendation_history")
     try:
         cursor = ctx.deps.db.cursor()

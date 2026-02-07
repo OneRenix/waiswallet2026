@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaisWallet - Strategic Financial Navigator</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="bg-slate-50 text-slate-900 transition-colors duration-300">
+
+    <!-- Navigation -->
+    <nav
+        class="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-4 md:px-8">
+        <div class="flex items-center">
+            <button id="btn-menu" class="p-2 hover:bg-slate-100 rounded-full transition-colors mr-4">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <h1 class="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight cursor-pointer"
+                onclick="window.app.switchView('dashboard')">
+                WaisWallet
+            </h1>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-container" class="pt-24 px-4 md:px-8 max-w-7xl mx-auto pb-32">
+        <!-- Views will be injected here by jQuery -->
+    </main>
+
+    <!-- Slide-Over Menu -->
+    <div id="slide-menu" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="slide-menu-backdrop"></div>
+        <div class="relative w-80 bg-white h-full shadow-2xl p-6 flex flex-col animate-slide-in-left">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="font-black text-2xl tracking-tight text-blue-600">WaisWallet</h2>
+                <button id="btn-close-menu" class="p-2 hover:bg-slate-100 rounded-full"><i data-lucide="x"></i></button>
+            </div>
+            <nav class="flex-1 space-y-2">
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="dashboard"><i data-lucide="pie-chart"></i> Dashboard</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="recommendations"><i data-lucide="sparkles"></i> Recommendations</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="wallets"><i data-lucide="wallet"></i> My Wallets</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="budgets"><i data-lucide="banknote"></i> Budgets</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="reports"><i data-lucide="file-text"></i> Reports</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="cashback"><i data-lucide="coins"></i> Cashback Tracker</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="goals"><i data-lucide="target"></i> Goals</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="history"><i data-lucide="history"></i> Transactions</button>
+                <div class="h-px bg-slate-100 my-4"></div>
+                <p class="px-3 text-[10px] font-bold text-slate-400 uppercase mb-2">Navigator Tools</p>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="simulation"><i data-lucide="calculator"></i> Budget Sim</button>
+                <button
+                    class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all hover:bg-slate-50"
+                    data-view="settings"><i data-lucide="settings"></i> Settings</button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Fixed FABs -->
+    <div class="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-30 pointer-events-none">
+        <button id="fab-chat"
+            class="pointer-events-auto flex items-center justify-center bg-white text-blue-600 w-14 h-14 rounded-full shadow-2xl border border-slate-100 hover:bg-slate-100 transition-colors">
+            <i data-lucide="sparkles" class="w-6 h-6 animate-pulse"></i>
+        </button>
+        <button id="fab-add"
+            class="pointer-events-auto flex items-center justify-center bg-blue-600 text-white w-14 h-14 rounded-full shadow-2xl shadow-blue-500/40 hover:bg-blue-700 transition-colors">
+            <i data-lucide="plus" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- Recommendations Modal -->
+    <div id="modal-recommendations"
+        class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-2xl w-full max-w-lg md:max-w-3xl animate-zoom-in shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div
+                class="p-6 bg-gradient-to-br from-blue-700 to-indigo-800 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="sparkles" class="text-yellow-400 fill-current"></i>
+                    <div>
+                        <h3 class="font-bold text-xl">All Recommendations</h3>
+                        <p class="text-xs text-indigo-100 opacity-80">AI-driven insights for your wallet.</p>
+                    </div>
+                </div>
+                <button class="btn-close-modal p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4" id="recommendations-list">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal Overlay -->
+    <div id="modal-chat"
+        class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-3xl w-full max-w-lg md:max-w-xl h-[550px] flex flex-col shadow-2xl overflow-hidden animate-zoom-in">
+            <div class="p-3 bg-blue-600 text-white flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-6 h-6"></i>
+                    <div>
+                        <h3 class="font-bold leading-none">WaisWallet AI</h3>
+                        <span class="text-[10px] text-blue-100">Ready for Strategic Analysis</span>
+                    </div>
+                </div>
+                <button class="btn-close-modal p-2 hover:bg-white/20 rounded-full text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50"></div>
+            <form id="form-chat" class="p-4 bg-white border-t border-slate-100 flex gap-2 items-center">
+                <button type="button" id="btn-chat-upload"
+                    class="p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors"
+                    title="Upload Image">
+                    <i data-lucide="camera" class="w-5 h-5"></i>
+                </button>
+                <input type="file" id="chat-file-upload" class="hidden" accept="image/*">
+                <input type="text" id="chat-input" placeholder="Type your query..."
+                    class="flex-1 p-3 rounded-2xl border border-slate-200 text-sm outline-none bg-slate-50 text-slate-900 placeholder:text-slate-400">
+                <button type="submit"
+                    class="bg-blue-600 text-white p-3 rounded-2xl hover:bg-blue-700 transition-colors"><i
+                        data-lucide="send" class="w-5 h-5"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="modal-add"
+        class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-2xl w-full max-w-lg md:max-w-2xl animate-zoom-in border border-slate-100 shadow-xl max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h3 class="font-bold text-lg">New Entry</h3>
+                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4">
+                <div class="flex bg-slate-100 p-1 rounded-xl mb-4">
+                    <button
+                        class="flex-1 py-2 rounded-lg font-bold text-sm bg-white shadow-sm transition-all text-slate-800"
+                        id="tab-expense">Expense</button>
+                    <button
+                        class="flex-1 py-2 rounded-lg font-bold text-sm text-slate-500 hover:text-slate-700 transition-all"
+                        id="tab-income">Income</button>
+                </div>
+                <form id="form-add" class="space-y-4">
+                    <div id="section-scanner"
+                        class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="camera" class="text-blue-600"></i>
+                            <p class="text-xs font-bold text-blue-700 leading-tight">Magic Scanner<br /><span
+                                    class="font-normal opacity-70">Auto-fill by uploading a receipt or a note.</span>
+                            </p>
+                        </div>
+                        <button type="button" id="btn-scan"
+                            class="bg-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm border border-blue-200 hover:bg-blue-50 transition-colors">SCAN
+                            NOW</button>
+                        <input type="file" id="file-upload" class="hidden" accept="image/*">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Amount (₱)</label>
+                            <input type="number" id="inp-amount" required
+                                class="w-full p-2.5 rounded-xl border border-slate-200 outline-none font-bold bg-slate-50 text-slate-900 text-sm"
+                                placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
+                                id="lbl-merchant">Merchant</label>
+                            <input type="text" id="inp-merchant" required
+                                class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm"
+                                placeholder="Store Name">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date</label>
+                            <div class="relative">
+                                <input type="date" id="inp-date" required
+                                    class="w-full p-2.5 pr-10 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                                <i data-lucide="calendar"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Time</label>
+                            <div class="relative">
+                                <input type="time" id="inp-time" required
+                                    class="w-full p-2.5 pr-10 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                                <i data-lucide="clock"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="section-category">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Category</label>
+                        <select id="inp-category" required
+                            class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm"></select>
+                    </div>
+                    <div id="section-payment-type">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">Payment Type</label>
+                        <div class="flex gap-2">
+                            <button type="button"
+                                class="btn-payment-type flex-1 py-2 rounded-xl text-xs font-bold border transition-colors bg-blue-600 text-white border-blue-600"
+                                data-type="straight">Straight</button>
+                            <button type="button"
+                                class="btn-payment-type flex-1 py-2 rounded-xl text-xs font-bold border transition-colors bg-white text-slate-500 border-slate-200"
+                                data-type="installment">Installment</button>
+                        </div>
+                    </div>
+                    <div id="installment-config" class="hidden animate-slide-down">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Term (Months)</label>
+                        <select id="inp-installments"
+                            class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                            <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12">12 Months</option>
+                            <option value="24">24 Months</option>
+                        </select>
+                    </div>
+                    <div id="section-card">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1" id="lbl-card">Strategic
+                            Card Choice</label>
+                        <select id="inp-card" required
+                            class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Note (Optional)</label>
+                        <textarea id="inp-note" rows="3"
+                            class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm resize-none"
+                            placeholder="Details about this transaction..."></textarea>
+                    </div>
+                    <button type="submit" id="btn-submit-entry"
+                        class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-500/20 active:scale-95 transition-all hover:bg-blue-700 mt-2 text-sm">Save
+                        Expense</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Modal (Add/Edit) -->
+    <div id="modal-wallet"
+        class="fixed inset-0 z-[90] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-2xl w-full max-w-lg md:max-w-2xl animate-zoom-in border border-slate-100 shadow-xl max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h3 class="font-bold text-lg" id="modal-wallet-title">Add New Wallet</h3>
+                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-wallet" class="p-5 space-y-4">
+                <input type="hidden" id="inp-wallet-id">
+                <input type="hidden" id="inp-wallet-balance">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Wallet Name</label>
+                        <input type="text" id="inp-wallet-name"
+                            class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-bold text-slate-900"
+                            placeholder="e.g. Amore Cashback" required>
+                    </div>
+                    <div class="grid grid-cols-5 gap-3">
+                        <div class="col-span-3">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Provider</label>
+                            <select id="inp-wallet-provider" required
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-bold text-slate-900">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Color</label>
+                            <select id="inp-wallet-color"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm font-bold text-slate-900 appearance-none">
+                                <option value="#3b82f6">🔵 Blue</option>
+                                <option value="#10b981">🟢 Emerald</option>
+                                <option value="#f43f5e">🔴 Rose</option>
+                                <option value="#f59e0b">🟠 Amber</option>
+                                <option value="#8b5cf6">🟣 Violet</option>
+                                <option value="#6366f1">🔮 Indigo</option>
+                                <option value="#64748b">⚫ Slate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Type</label>
+                            <select id="inp-wallet-type"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm text-slate-900">
+                                <option value="credit">Credit Card</option>
+                                <option value="debit">Debit Card</option>
+                                <option value="digital_bank">Digital Bank</option>
+                                <option value="ewallet">E-Wallet</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Limit
+                                (Optional)</label>
+                            <input type="number" id="inp-wallet-limit" step="0.01"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm text-slate-900"
+                                placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Due Date</label>
+                            <input type="date" id="inp-wallet-due-date"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm text-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cycle Date</label>
+                            <input type="date" id="inp-wallet-cycle-date"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm text-slate-500">
+                        </div>
+                    </div>
+                    <div class="col-span-2 bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-blue-500"></i>
+                            <h4 class="font-bold text-slate-800">Cashback & Benefits</h4>
+                        </div>
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Monthly
+                                    Cashback
+                                    Cap (₱)</label>
+                                <input type="number" id="inp-wallet-cap"
+                                    class="w-full p-3 rounded-2xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-900"
+                                    placeholder="e.g. 1500">
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase">Category Multipliers
+                                    (Cashback %)</label>
+                                <div id="multiplier-list" class="space-y-3">
+                                    <!-- Dynamically populated categories -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button type="submit"
+                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Save Wallet</span>
+                    </button>
+                    <!-- Delete button hidden for now -->
+                    <button type="button" id="btn-delete-wallet"
+                        class="hidden w-full mt-3 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition-all">
+                        Delete Wallet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Goal Management Modal -->
+    <div id="modal-goal"
+        class="fixed inset-0 z-[90] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md animate-zoom-in border border-slate-100 shadow-xl">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="modal-goal-title">Add Goal</h3>
+                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-goal" class="p-5 space-y-4">
+                <input type="hidden" id="goal-id">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Goal Name</label>
+                    <input type="text" id="goal-name" required
+                        class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Amount</label>
+                        <input type="number" id="goal-target" required
+                            class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Current Saved</label>
+                        <input type="number" id="goal-current" required
+                            class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Source Account
+                        (Optional)</label>
+                    <select id="goal-source"
+                        class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Color Theme</label>
+                    <select id="goal-color"
+                        class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                        <option value="bg-emerald-500">Emerald (Safety)</option>
+                        <option value="bg-blue-500">Blue (Tech/General)</option>
+                        <option value="bg-purple-500">Purple (Leisure/Travel)</option>
+                        <option value="bg-rose-500">Rose (Urgent)</option>
+                        <option value="bg-amber-500">Amber (Luxury)</option>
+                        <option value="bg-red-500">Red (Critical)</option>
+                        <option value="bg-cyan-500">Cyan (Cool)</option>
+                        <option value="bg-lime-500">Lime (Growth)</option>
+                        <option value="bg-indigo-500">Indigo (Deep)</option>
+                        <option value="bg-pink-500">Pink (Fun)</option>
+                        <option value="bg-teal-500">Teal (Balanced)</option>
+                        <option value="bg-violet-500">Violet (Creative)</option>
+                        <option value="bg-fuchsia-500">Fuchsia (Bold)</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-colors">Save
+                    Goal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wallet Transactions Modal -->
+    <div id="modal-wallet-transactions"
+        class="fixed inset-0 z-[90] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-2xl w-full max-w-3xl animate-zoom-in border border-slate-100 shadow-xl max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="wallet-tx-title">Transactions</h3>
+                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div id="wallet-tx-list" class="overflow-y-auto p-0 flex-1">
+                <!-- Transactions Injected Here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal (Refactored Layout) -->
+    <div id="modal-edit-transaction"
+        class="fixed inset-0 z-[95] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-2xl w-full max-w-md animate-zoom-in border border-slate-100 shadow-xl h-auto max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg">Edit Transaction</h3>
+                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-edit-transaction" class="flex flex-col h-full overflow-hidden">
+                <div class="flex-1 overflow-y-auto p-5 space-y-4">
+                    <input type="hidden" id="edit-tx-id">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Amount</label>
+                            <input type="number" id="edit-tx-amount" step="0.01"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none font-bold text-slate-900 text-sm"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date</label>
+                            <input type="date" id="edit-tx-date"
+                                class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm"
+                                required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Merchant /
+                            Source</label>
+                        <input type="text" id="edit-tx-merchant"
+                            class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm text-slate-900"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Category</label>
+                        <select id="edit-tx-category"
+                            class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm text-slate-900"></select>
+                    </div>
+                </div>
+                <!-- Fixed Footer Buttons -->
+                <div class="p-5 border-t border-slate-100 flex gap-3 bg-slate-50 rounded-b-2xl shrink-0">
+                    <button type="button" id="btn-delete-tx"
+                        class="p-3 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition-colors"
+                        title="Delete Transaction">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-colors">Update
+                        Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="modal-add-category"
+        class="fixed inset-0 z-[95] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md animate-zoom-in border border-slate-100 shadow-xl">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Add Budget Category</h3>
+                <button class="btn-close-modal p-1.5 text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-add-category" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Category Name</label>
+                    <input type="text" id="new-cat-name" required
+                        class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm"
+                        placeholder="e.g. Subscriptions">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Monthly Budget
+                        Limit</label>
+                    <input type="number" id="new-cat-limit" required
+                        class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm"
+                        placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Color Theme</label>
+                    <select id="new-cat-color"
+                        class="w-full p-2.5 rounded-xl border border-slate-200 outline-none bg-slate-50 text-slate-900 text-sm">
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                        <option value="purple">Purple</option>
+                        <option value="orange">Orange</option>
+                        <option value="pink">Pink</option>
+                        <option value="teal">Teal</option>
+                        <option value="indigo">Indigo</option>
+                        <option value="rose">Rose</option>
+                        <option value="red">Red</option>
+                        <option value="cyan">Cyan</option>
+                        <option value="lime">Lime</option>
+                        <option value="violet">Violet</option>
+                        <option value="fuchsia">Fuchsia</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-colors">Create
+                    Category</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

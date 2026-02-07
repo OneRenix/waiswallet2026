@@ -1,0 +1,7 @@
+{
+  "name": "WaisWallet Bootstrap JQuery V2",
+  "description": "A strategic financial co-pilot for the Philippine market helping users optimize credit float, manage budgets, and make data-driven spending decisions.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

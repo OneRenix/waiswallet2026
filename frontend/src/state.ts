@@ -23,7 +23,7 @@ export const state = {
     categoryBudgets: {} as Record<string, number>,
     totalIncome: 0,
     messages: [
-        { id: 1, sender: 'buddy', text: "Hi! I'm WaisWallet, your strategic financial co-pilot. I'm connected to your real database now. How can I help?", feedback: null }
+        { id: 1, sender: 'buddy', text: "Hi! I'm Wais Wallet AI pilot, your strategic financial co-pilot. How can I assist you in optimizing your finances today?", feedback: null }
     ],
     simData: {
         amount: '', cardId: 1, category: 'shopping', paymentType: 'straight',
@@ -136,6 +136,18 @@ export const state = {
             console.log(`Recommendation ${id} updated to ${status}`);
         } catch (error) {
             console.error("Error updating recommendation:", error);
+        }
+    },
+
+    async resetChat() {
+        try {
+            await api.resetChat();
+            this.messages = [
+                { id: 1, sender: 'buddy', text: "Hi! I'm Wais Wallet AI pilot, your strategic financial co-pilot. How can I assist you in optimizing your finances today?", feedback: null }
+            ];
+            console.log("Chat session reset.");
+        } catch (error) {
+            console.error("Error resetting chat:", error);
         }
     }
 };

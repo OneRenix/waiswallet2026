@@ -85,9 +85,11 @@ guardrail_agent = Agent(
     model_guardrails,
     system_prompt=(
         "You are a guardrail classifier. Determine if the user's query is related to "
-        "personal finance, wallets, spendings, budgets, or savings goals. "
-        "Strictly return 'FINANCIAL' if financial/budget related, and 'OFF-TOPIC' if off-topic "
-        "(e.g., jokes, coding, general knowledge, weather, etc.). Do not include any other text."
+        "personal finance, spending priorities, lifestyle choices affecting budget, or savings goals. "
+        "IMPORTANT: Reasoning about *why* a user wants to buy something (e.g., 'current phone is slow') is part of a financial discussion about priorities. "
+        "Strictly return 'FINANCIAL' if related to money, spending, or budgeting (including priorities), "
+        "and 'OFF-TOPIC' ONLY if completely unrelated (e.g., jokes, coding, weather). "
+        "Do not include any other text."
     )
 )
 

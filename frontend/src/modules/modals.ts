@@ -258,8 +258,46 @@ export const initModals = () => {
     });
 
     // --- Chat Logic ---
-    $('#fab-chat').off('click').on('click', () => {
+    const renderChatSuggestions = () => {
+        const suggestions = [
+            { text: "Best card for Groceries?", icon: "shopping-cart" },
+            { text: "My cashback this month?", icon: "coins" },
+            { text: "Check my goal progress", icon: "target" },
+            { text: "Top 5 purchases this month?", icon: "trending-up" }
+        ];
+
+        const $container = $('#chat-suggestions').empty();
+        suggestions.forEach(s => {
+            $container.append(`
+                <button type="button" class="btn-chat-suggest p-2 px-3 rounded-xl border border-slate-100 bg-slate-50 text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:border-blue-100 hover:text-blue-600 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                    <i data-lucide="${s.icon}" class="w-3 h-3"></i> ${s.text}
+                </button>
+            `);
+        });
+        if ((window as any).lucide) (window as any).lucide.createIcons();
+    };
+
+    const renderChatWelcome = () => {
+        const welcome = state.messages[0];
+        $('#chat-messages').html(`
+            <div class="flex flex-col items-start message-bubble">
+                <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm bg-white border border-slate-100 text-slate-700 rounded-tl-none">${welcome.text}</div>
+            </div>
+        `);
+        if ((window as any).lucide) (window as any).lucide.createIcons();
+    };
+
+    $('#fab-chat').off('click').on('click', async () => {
+        await state.resetChat();
+        renderChatWelcome();
+        renderChatSuggestions();
         $('#modal-chat').removeClass('hidden').addClass('flex');
+    });
+
+    $(document).off('click', '.btn-chat-suggest').on('click', '.btn-chat-suggest', function (this: HTMLElement) {
+        const text = $(this).text().trim();
+        $('#chat-input').val(text);
+        $('#form-chat').submit();
     });
 
     $('#form-chat').off('submit').on('submit', async function (e: any) {

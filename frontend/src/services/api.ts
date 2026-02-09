@@ -109,6 +109,22 @@ export const api = {
         return res.json();
     },
 
+    async resetChat() {
+        const sessionId = localStorage.getItem('wais_session_id');
+        if (!sessionId) return { status: 'success' };
+
+        const res = await fetch(`${API_BASE}/chat/reset?session_id=${sessionId}`, {
+            method: 'DELETE'
+        });
+        if (!res.ok) throw new Error("Failed to reset chat");
+
+        // Also regenerate session ID to be extra sure
+        const newSessionId = 'web_' + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem('wais_session_id', newSessionId);
+
+        return res.json();
+    },
+
     async updateRecommendationStatus(id: number, status: string) {
         const res = await fetch(`${API_BASE}/api/recommendations/${id}`, {
             method: 'PUT',

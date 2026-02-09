@@ -60,14 +60,31 @@ def save_log(db: Connection, session_id: str, sender: str, message: str):
     except Exception as e:
         print(f"Failed to save chat log: {e}")
 
+@router.delete("/reset")
+async def reset_chat_history(session_id: Optional[str] = "default_session", db: Connection = Depends(get_db_session)):
+    """Clears the chat history for a session."""
+    try:
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM chat_logs WHERE session_id = ?", (session_id,))
+        db.commit()
+        return {"status": "success", "message": f"History for session '{session_id}' cleared."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/")
 async def chat_with_pilot(request: ChatRequest, db: Connection = Depends(get_db_session)):
     query = request.query
     session_id = request.session_id
 
-    # 0. Fast Intent Check (Guardrail)
+    # 1. Load History & Rules
+    message_history = get_history(db, session_id)
+    with open("app/data/database_compact.md", "r") as f:
+        rules = f.read()
+
+    # 0. Fast Intent Check (Guardrail) - Context Aware
     try:
-        classifier_result = await guardrail_agent.run(query)
+        classifier_result = await guardrail_agent.run(query, message_history=message_history)
         classifier_output = str(getattr(classifier_result, 'output', classifier_result))
         
         if "OFF-TOPIC" in classifier_output.upper():
@@ -79,11 +96,6 @@ async def chat_with_pilot(request: ChatRequest, db: Connection = Depends(get_db_
     except Exception as e:
         print(f"Guardrail check failed: {e}")
         pass
-
-    # 1. Load History & Rules
-    message_history = get_history(db, session_id)
-    with open("app/data/database_compact.md", "r") as f:
-        rules = f.read()
     
     # 2. Package Dependencies
     is_new_session = len(message_history) == 0

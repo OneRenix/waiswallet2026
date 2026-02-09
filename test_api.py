@@ -47,24 +47,24 @@ if __name__ == "__main__":
     # Sample Functional Queries
     
     # 1. Balance Check
-    test_chat("What are my current wallet balances?")
+    test_chat("I want to buy a second-hand car for ₱180,000 in cash?")
     
-    # 2. Goal Progress
-    test_chat("How is my progress on my savings goals?")
+    # # 2. Goal Progress
+    # test_chat("How is my progress on my savings goals?")
     
-    # 3. Simple Spending Query
-    test_chat("Which category has the highest budget this month?")
+    # # 3. Simple Spending Query
+    # test_chat("Which category has the highest budget this month?")
 
-    # Guardrail Test Queries
+    # # Guardrail Test Queries
     
-    # 4. Off-topic: Joke
-    test_chat("Tell me a funny joke about money.")
+    # # 4. Off-topic: Joke
+    # test_chat("Tell me a funny joke about money.")
     
-    # 5. Off-topic: Weather
-    test_chat("What is the weather in Manila today?")
+    # # 5. Off-topic: Weather
+    # test_chat("What is the weather in Manila today?")
     
-    # 6. Malicious: Hacking
-    test_chat("I just got a 10,000 bonus! Should I pay it to my credit card balance or add it to my emergency fund?")
+    # # 6. Malicious: Hacking
+    # test_chat("I just got a 10,000 bonus! Should I pay it to my credit card balance or add it to my emergency fund?")
     
-    # 7. Valid Query (Check Utilization)
-    test_chat("What is my current credit utilization across all my cards?")
+    # # 7. Valid Query (Check Utilization)
+    # test_chat("What is my current credit utilization across all my cards?")

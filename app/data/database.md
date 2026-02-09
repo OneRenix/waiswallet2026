@@ -52,7 +52,7 @@ You are the **Strategic Pilot** for Wais W. You manage financial logic through a
 * **`name`** (TEXT): Display name (e.g., `Amore Cashback`).
 * **`provider_id`** (INTEGER, FK): References `providers.id`.
 * **`color`** (TEXT): User-selected hex color code (e.g., `#3b82f6`).
-* **`type`** (TEXT): `credit`, `debit`, or `cash`.
+* **`type`** (TEXT): `credit`, `debit`, `digital_bank`, `ewallet`, or `cash`
 * **`balance`** (REAL): Current debt (for Credit) or Cash (for Debit/Cash).
 * **`available_credit`** (REAL): Total swiping power remaining (Limit minus total debt).
 * **`credit_limit`** (REAL): The hard limit assigned by the bank.

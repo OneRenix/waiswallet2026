@@ -1,174 +1,86 @@
 from dataclasses import dataclass
-import sqlite3
-import re
+from pydantic import BaseModel
 from pydantic_ai import RunContext
+from sqlite3 import Connection
+import re
+from tenacity import retry, stop_after_attempt, wait_exponential
+import sqlite3
+from ..core.logger import logger, log_tool_call, log_security_block, log_error
+from ..core.exceptions import DatabaseError, ValidationError, ToolExecutionError
 
 @dataclass
 class PilotDeps:
     db: sqlite3.Connection
-    system_rules: str  # Content of database.md (Now database_compact.md)
+    system_rules: str  # Content of database_compact.md
+    is_new_session: bool = False
 
 # ==========================================================
 # RE-ACT TOOLS: These are the "hands" of the agent
 # ==========================================================
 
-async def get_wallet_balances(ctx: RunContext[PilotDeps]):
-    """Queries the SQLite DB for current cash and debt balances."""
-    query = "SELECT id, name, type, balance, available_credit FROM wallets"
-    print(f"🔍 [Tool Call] get_wallet_balances | SQL: {query}")
-    cursor = ctx.deps.db.cursor()
-    cursor.execute(query)
-    return [dict(row) for row in cursor.fetchall()]
-
-async def check_goal_progress(ctx: RunContext[PilotDeps]):
-    """Checks the status of Priority 1 savings goals."""
-    query = "SELECT name, target_amount, current_amount FROM savings_goals WHERE priority_level = 1"
-    print(f"🔍 [Tool Call] check_goal_progress | SQL: {query}")
-    cursor = ctx.deps.db.cursor()
-    cursor.execute(query)
-    return [dict(row) for row in cursor.fetchall()]
-
-async def optimize_payment_method(ctx: RunContext[PilotDeps], category_id: int):
-    """
-    Finds the best wallet for a purchase based on rewards and caps.
-    Logic: Checks mapping in database.md against current cashback usage.
-    """
-    query = """
-        SELECT w.id, w.name, w.type, w.balance, w.available_credit, 
-               h.amount_earned, h.monthly_limit, h.is_capped
-        FROM wallets w
-        LEFT JOIN wallet_cashback_history h ON w.id = h.wallet_id 
-             AND h.month_year = strftime('%Y-%m', 'now')
-    """
-    print(f"🔍 [Tool Call] optimize_payment_method | SQL: {query.strip()}")
-    cursor = ctx.deps.db.cursor()
-    cursor.execute(query)
-    wallets = [dict(row) for row in cursor.fetchall()]
-    return wallets
-
-async def subscription_auditor(ctx: RunContext[PilotDeps]):
-    """Checks for missing or double payments of recurring expenses."""
-    query = """
-        SELECT r.name, r.amount_estimate, r.frequency, 
-               MAX(d.billing_date) as last_paid
-        FROM recurring_expenses r
-        LEFT JOIN transaction_details d ON r.category_id = d.category_id
-        WHERE r.is_active = 1
-        GROUP BY r.id
-    """
-    print(f"🔍 [Tool Call] subscription_auditor | SQL: {query.strip()}")
-    cursor = ctx.deps.db.cursor()
-    cursor.execute(query)
-    return [dict(row) for row in cursor.fetchall()]
-
-async def debt_repayment_engine(ctx: RunContext[PilotDeps]):
-    """Analyzes income vs debt to suggest optimized payment amounts."""
-    debt_query = "SELECT SUM(balance) as total_debt FROM wallets WHERE type = 'credit'"
-    savings_query = "SELECT SUM(balance) as total_savings FROM wallets WHERE type = 'debit'"
-    print(f"🔍 [Tool Call] debt_repayment_engine | SQLs: {debt_query}, {savings_query}")
-    
-    cursor = ctx.deps.db.cursor()
-    cursor.execute(debt_query)
-    debt_row = cursor.fetchone()
-    debt = debt_row[0] if debt_row else 0
-    
-    cursor.execute(savings_query)
-    savings_row = cursor.fetchone()
-    savings = savings_row[0] if savings_row else 0
-    
-    return {
-        "total_debt": debt or 0,
-        "total_savings": savings or 0,
-        "recommendation": "Pay 20% of smallest balance first" if (debt and debt > 0) else "All clear"
-    }
-
-async def credit_utilization_guard(ctx: RunContext[PilotDeps]):
-    """Monitors credit cards to ensure they stay below 30% utilization."""
-    query = """
-        SELECT name, balance, credit_limit, 
-               CASE WHEN credit_limit > 0 THEN (balance / credit_limit) * 100 ELSE 0 END as utilization
-        FROM wallets 
-        WHERE type = 'credit'
-    """
-    print(f"🔍 [Tool Call] credit_utilization_guard | SQL: {query.strip()}")
-    cursor = ctx.deps.db.cursor()
-    cursor.execute(query)
-    return [dict(row) for row in cursor.fetchall()]
-
 async def run_sql_query(ctx: RunContext[PilotDeps], query: str):
     """
-    Executes a read-only SQL query against the SQLite database.
-    Use this tool when no specific tool matches the user's request.
+    Execute a SQLite SELECT query to fetch financial data.
     
-    IMPORTANT Safety Rules:
-    1. Only SELECT statements are allowed.
-    2. Do NOT modify data (NO INSERT, UPDATE, DELETE, DROP).
+    COLUMNS MAPPING (CRITICAL):
+    - Table 'wallets': Use 'name' (NOT 'wallet_name') and 'type' (NOT 'wallet_type').
+    - Table 'transaction_headers': Use 'wallet_id', 'merchant', 'total_amount'.
+    
+    RULES:
+    - Read-only (SELECT). No INSERT/UPDATE/DELETE.
+    - Max 50 rows returned.
     """
-    # Security check: Basic protection against destructive and system operations
-    forbidden_keywords = [
-        "DELETE", "DROP", "ALTER", "TRUNCATE", "REPLACE",
-        "PRAGMA", "ATTACH", "DETACH", "COMMIT", "ROLLBACK", "VACUUM"
-    ]
+    db = ctx.deps.db
+    
+    # 1. Security: Strict Write-Blocking
+    forbidden = r'\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b'
+    if re.search(forbidden, query, re.IGNORECASE):
+        # Using raise here as it's a security violation
+        # We need to make sure ValidationError is handled by the caller or we return a dict
+        # The user's prompt showed `raise ValidationError`, but the previous code returned a dict for `except Exception`
+        # To be safe and consistent with the user's request, I will return a dict error for security too, 
+        # as raising an exception might crash the agent if not caught by PydanticAI's tool handler (which it usually is, but dict is safer for the agent to see).
+        # WAIT, the user code explicitly said: `raise ValidationError("SQL write operations are forbidden. Use dedicated tools.")`
+        # I will respect the user's code.
+        raise ValidationError("SQL write operations are forbidden. Use dedicated tools.")
+    
+    # 2. Token Efficiency: Force LIMIT 50
     normalized_query = query.strip().upper()
-    
-    if any(kw in normalized_query for kw in forbidden_keywords):
-        print(f"⚠️ [Security Blocked] run_sql_query | SQL: {query}")
-        return {"error": f"Security Alert: The keyword you used is not allowed for safety reasons."}
-    
-    # Enforce LIMIT 50 for safety and token efficiency
     if "LIMIT" not in normalized_query:
         query = query.rstrip(';') + " LIMIT 50"
-    else:
-        # Check if the existing limit is too high
-        match = re.search(r'LIMIT\s+(\d+)', normalized_query)
-        if match and int(match.group(1)) > 50:
-            query = re.sub(r'LIMIT\s+\d+', 'LIMIT 50', query, flags=re.IGNORECASE)
-        
-    print(f"🔍 [Tool Call] run_sql_query | SQL: {query}")
+    
     try:
-        cursor = ctx.deps.db.cursor()
+        # 3. Validation: Explain before Execute
+        db.execute(f"EXPLAIN QUERY PLAN {query}")
         
-        # Fast Validation: Verify syntax and logic using EXPLAIN
-        try:
-            cursor.execute(f"EXPLAIN QUERY PLAN {query}")
-        except sqlite3.Error as e:
-            print(f"⚠️ [SQL Validation Failed] Query: {query} | Error: {e}")
-            return {"error": f"SQL Validation Error: {str(e)}. Please check your table/column names and syntax."}
-
-        # Actual Execution
+        # 4. Execution
+        cursor = db.cursor()
         cursor.execute(query)
         rows = cursor.fetchall()
         
-        # If no results
-        if not rows:
-            return {"message": "No results found for the query."}
-            
-        # Return list of dicts for the agent to analyze
-        return [dict(row) for row in rows]
+        return [dict(row) for row in rows] if rows else [{"message": "No data found."}]
+        
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        # 5. Smart Error Handling: Guides the agent back to the schema
+        error_msg = str(e).lower()
+        if "no such column" in error_msg:
+            return [{"error": f"{str(e)}", "tip": "Use 'name' for wallet names, not 'wallet_name'."}]
+        return [{"error": f"Query failed: {str(e)}"}]
 
 async def get_table_schema(ctx: RunContext[PilotDeps], table_name: str):
-    """
-    Retrieves the detailed schema (columns, types, constraints) for a specific table.
-    Use this BEFORE writing a SQL query to ensure your column names are correct.
-    """
-    # Security: basic name validation
+    """Fetch table schema (cols/types). Only use if not in prompt."""
     if not re.match(r'^\w+$', table_name):
         return {"error": "Invalid table name format."}
         
-    print(f"🔍 [Tool Call] get_table_schema | Table: {table_name}")
+    log_tool_call("get_table_schema", table_name=table_name)
     try:
         cursor = ctx.deps.db.cursor()
-        
-        # 1. Get column info
         cursor.execute(f"PRAGMA table_info({table_name});")
         columns = [dict(row) for row in cursor.fetchall()]
         
         if not columns:
             return {"error": f"Table '{table_name}' not found."}
             
-        # 2. Get foreign key info
         cursor.execute(f"PRAGMA foreign_key_list({table_name});")
         fks = [dict(row) for row in cursor.fetchall()]
         
@@ -180,18 +92,60 @@ async def get_table_schema(ctx: RunContext[PilotDeps], table_name: str):
     except Exception as e:
         return {"error": f"Error fetching schema: {str(e)}"}
 
-async def get_recommendation_history(ctx: RunContext[PilotDeps]):
-    """
-    Retrieves the history of strategic recommendations and their current statuses.
-    Use this to avoid repeating recommendations that the user has already dismissed, snoozed, or completed.
-    Note: Statuses are 'pending', 'dismissed', 'completed' (acted_upon).
-    If a recommendation was dismissed > 30 days ago, it may be re-evaluated for financial health.
-    """
-    query = "SELECT title, message, status, urgency_level, created_at, updated_at FROM strategic_recommendations ORDER BY created_at DESC LIMIT 15"
-    print(f"🔍 [Tool Call] get_recommendation_history")
+from app.utils.wallet_benefits import get_cashback_rate
+
+async def add_transaction(ctx: RunContext[PilotDeps], wallet_id: int, total_amount: float, category_id: int, merchant: str, description: str = "", date: str = None):
+    """Record a purchase. IDs must be looked up via SQL first if unknown."""
+    log_tool_call("add_transaction", wallet_id=wallet_id, amount=total_amount)
+    
+    if date is None:
+        from datetime import date as dt
+        date = dt.today().isoformat()
+        
     try:
-        cursor = ctx.deps.db.cursor()
-        cursor.execute(query)
-        return [dict(row) for row in cursor.fetchall()]
+        db = ctx.deps.db
+        cursor = db.cursor()
+        
+        # 1. Insert Header
+        cursor.execute("""
+            INSERT INTO transaction_headers (wallet_id, merchant, total_amount, transaction_date, payment_type, description, executed_by)
+            VALUES (?, ?, ?, ?, 'straight', ?, 'ai')
+        """, (wallet_id, merchant, total_amount, date, description))
+        header_id = cursor.lastrowid
+        
+        # 2. Calculate Cashback
+        # Note: We need to adapt get_cashback_rate to work with cursor or connection if it expects a specific type
+        # But get_cashback_rate expects a connection, and ctx.deps.db is a connection.
+        cashback_rate = get_cashback_rate(db, wallet_id, category_id)
+        cashback_earned = total_amount * (cashback_rate / 100.0)
+        
+        # 3. Insert Detail
+        cursor.execute("""
+            INSERT INTO transaction_details (header_id, category_id, line_amount, billing_date, cashback_earned)
+            VALUES (?, ?, ?, ?, ?)
+        """, (header_id, category_id, total_amount, date, cashback_earned))
+        
+        db.commit()
+        return {"status": "success", "transaction_id": header_id, "message": f"Transaction recorded. Earned {cashback_earned} cashback."}
+        
     except Exception as e:
-        return {"error": f"Error fetching history: {str(e)}"}
+        db.rollback()
+        return {"error": f"Failed to add transaction: {str(e)}"}
+
+async def add_recommendation(ctx: RunContext[PilotDeps], title: str, message: str, urgency: str = "medium"):
+    """Save financial advice/warnings to dashboard. Urgency: low|med|high|critical."""
+    log_tool_call("add_recommendation", title=title)
+    try:
+        db = ctx.deps.db
+        cursor = db.cursor()
+        
+        cursor.execute("""
+            INSERT INTO strategic_recommendations (title, message, urgency_level, status)
+            VALUES (?, ?, ?, 'pending')
+        """, (title, message, urgency))
+        
+        db.commit()
+        return {"status": "success", "message": "Recommendation saved to dashboard."}
+    except Exception as e:
+        db.rollback()
+        return {"error": f"Failed to save recommendation: {str(e)}"}

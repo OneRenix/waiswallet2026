@@ -35,7 +35,7 @@ export const renderCashback = () => {
         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-2.5 ${card.color} text-white rounded-xl shadow-sm">
+                    <div class="p-2.5 text-white rounded-xl shadow-sm" style="background-color: ${card.color}">
                         <i data-lucide="${card.icon}" class="w-5 h-5"></i>
                     </div>
                     <div>
@@ -78,51 +78,56 @@ export const renderCashback = () => {
         </div>`;
     };
 
+    // Calculate Top Performer
+    const topPerformer = [...state.cards].sort((a, b) => (b.cashbackMTD || 0) - (a.cashbackMTD || 0))[0];
+
     return `
     <div class="animate-slide-in">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-end mb-8">
             <div>
-                <h2 class="text-2xl font-bold flex items-center gap-2 text-slate-900">
+                <h2 class="text-2xl font-bold flex items-center gap-2 text-slate-900 leading-tight">
                     <i data-lucide="coins" class="text-amber-500"></i> Cashback Tracker
                 </h2>
-                <p class="text-xs text-slate-500">Optimizing your rewards for ${currentMonth}</p>
+                <p class="text-sm text-slate-500 font-medium">Optimizing your rewards for ${currentMonth}</p>
             </div>
             <div class="text-right">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">MTD Total Earned</p>
-                <p class="text-2xl font-black text-emerald-600">${formatCurrency(totalMTD)}</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">MTD Total Earned</p>
+                <p class="text-3xl font-black text-emerald-600 leading-none tabular-nums">${formatCurrency(totalMTD)}</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             ${state.cards.filter(c => c.monthlyLimit && c.monthlyLimit > 0).map(renderCardBreakdown).join('')}
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
-                        <h3 class="font-bold text-slate-900">Recent Earnings</h3>
-                        <span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded uppercase">${recentCashback.length} Items this month</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="md:col-span-1 lg:col-span-2">
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="history" class="w-4 h-4 text-slate-400"></i> Recent Earnings
+                        </h3>
+                        <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg uppercase tracking-wider">${recentCashback.length} Items this month</span>
                     </div>
-                    <div class="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
+                    <div class="divide-y divide-slate-50 overflow-y-auto flex-grow">
                         ${recentCashback.length === 0 ? `
-                            <div class="p-10 text-center text-slate-400 italic text-sm">No cashback earnings recorded yet this month.</div>
+                            <div class="p-12 text-center text-slate-400 italic text-sm">No cashback earnings recorded yet this month.</div>
                         ` : recentCashback.map(t => {
         const card = state.cards.find(c => c.id == t.cardId);
         return `
-                            <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 bg-amber-50 text-amber-600 rounded-full">
+                            <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors group">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:bg-amber-100 transition-colors">
                                         <i data-lucide="sparkles" class="w-4 h-4"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-bold text-slate-900">${t.merchant}</p>
-                                        <p class="text-[10px] text-slate-400">${t.date} • ${card ? card.name : 'Unknown Card'}</p>
+                                        <p class="text-sm font-bold text-slate-900 mb-0.5">${t.merchant}</p>
+                                        <p class="text-[10px] text-slate-500 font-medium">${t.date} • ${card ? card.name : 'Unknown Card'}</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm font-black text-emerald-600">+${formatCurrency(t.cashback)}</p>
-                                    <p class="text-[10px] text-slate-400">from ${formatCurrency(t.amount)} spend</p>
+                                    <p class="text-sm font-black text-emerald-600 tabular-nums">+${formatCurrency(t.cashback)}</p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">from ${formatCurrency(t.amount)} spend</p>
                                 </div>
                             </div>`;
     }).join('')}
@@ -130,42 +135,49 @@ export const renderCashback = () => {
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl text-white shadow-lg overflow-hidden relative">
+            <div class="md:col-span-1 lg:col-span-1 space-y-6">
+                <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl text-white shadow-xl shadow-orange-200/50 overflow-hidden relative group">
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-4">
-                            <i data-lucide="lightbulb" class="text-amber-200"></i>
-                            <h3 class="font-bold">Wais Tip</h3>
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                                <i data-lucide="lightbulb" class="w-5 h-5 text-amber-100"></i>
+                            </div>
+                            <h3 class="font-bold text-lg">Wais Tip</h3>
                         </div>
-                        <p class="text-xs leading-relaxed opacity-90 mb-4">
-                            You've hit ${Math.round(overallPct)}% of your combined monthly cashback limit. If any card reaches 100%, I'll automatically adjust your "Strategic Choice" to the next best card.
+                        <p class="text-xs leading-relaxed text-white/90 mb-6 font-medium">
+                            You've hit <span class="font-black text-white underline underline-offset-4 decoration-white/30">${Math.round(overallPct)}%</span> of your combined monthly cashback limit. If any card reaches 100%, I'll automatically adjust your "Strategic Choice" to the next best card.
                         </p>
-                        <button class="w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-bold uppercase transition-colors" onclick="window.app.switchView('recommendations')">
+                        <button class="w-full py-3 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md active:scale-95" onclick="window.app.switchView('recommendations')">
                             Review Strategies
                         </button>
                     </div>
-                    <i data-lucide="coins" class="absolute -right-4 -bottom-4 w-24 h-24 text-white/10 -rotate-12"></i>
+                    <i data-lucide="coins" class="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 -rotate-12 group-hover:scale-110 transition-transform duration-700"></i>
                 </div>
 
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i> Performance
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i> Performance Summary
                     </h3>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-500">Avg. Reward Rate</span>
-                            <span class="font-bold text-slate-900">4.2%</span>
+                    <div class="space-y-5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Avg. Reward Rate</span>
+                            <span class="text-base font-black text-slate-900 tabular-nums">4.2%</span>
                         </div>
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-500">Yearly Projection</span>
-                            <span class="font-bold text-emerald-600">${formatCurrency(totalMTD * 12)}</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Yearly Projection</span>
+                            <span class="text-base font-black text-emerald-600 tabular-nums">${formatCurrency(totalMTD * 12)}</span>
                         </div>
-                        <div class="pt-4 border-t border-slate-50">
-                            <p class="text-[10px] font-bold text-slate-700 uppercase mb-2">Best Card this month</p>
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                <span class="text-xs font-medium text-slate-600">Amore Cashback (₱840.50)</span>
+                        <div class="pt-5 mt-5 border-t border-slate-100">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Top Performer</p>
+                            ${topPerformer && topPerformer.cashbackMTD > 0 ? `
+                            <div class="flex items-center justify-between p-3 rounded-xl border" style="background-color: ${topPerformer.color}10; border-color: ${topPerformer.color}30">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2.5 h-2.5 rounded-full animate-pulse" style="background-color: ${topPerformer.color}"></div>
+                                    <span class="text-xs font-bold" style="color: ${topPerformer.color}">${topPerformer.name}</span>
+                                </div>
+                                <span class="text-xs font-black tabular-nums" style="color: ${topPerformer.color}">${formatCurrency(topPerformer.cashbackMTD)}</span>
                             </div>
+                            ` : `<p class="text-xs text-slate-400 italic">No earnings records yet.</p>`}
                         </div>
                     </div>
                 </div>

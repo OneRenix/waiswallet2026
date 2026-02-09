@@ -256,11 +256,25 @@ async def update_wallet(wallet_id: int, wallet: WalletBase, db: Connection = Dep
 async def create_goal(goal: GoalBase, db: Connection = Depends(get_db_session)):
     try:
         cursor = db.execute("""
-            INSERT INTO savings_goals (name, target_amount, current_amount, status)
-            VALUES (?, ?, ?, 'active')
-        """, (goal.name, goal.target_amount, goal.current_amount))
+            INSERT INTO savings_goals (name, target_amount, current_amount, color, icon, source_id, status)
+            VALUES (?, ?, ?, ?, ?, ?, 'active')
+        """, (goal.name, goal.target_amount, goal.current_amount, goal.color, goal.icon, goal.source_id))
         db.commit()
         return {"status": "success", "id": cursor.lastrowid}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/goals/{goal_id}")
+async def update_goal(goal_id: int, goal: GoalBase, db: Connection = Depends(get_db_session)):
+    try:
+        db.execute("""
+            UPDATE savings_goals 
+            SET name = ?, target_amount = ?, current_amount = ?, color = ?, icon = ?, source_id = ?
+            WHERE id = ?
+        """, (goal.name, goal.target_amount, goal.current_amount, goal.color, goal.icon, goal.source_id, goal_id))
+        db.commit()
+        return {"status": "success"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

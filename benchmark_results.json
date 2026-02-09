@@ -1,0 +1,577 @@
+[
+  {
+    "timestamp": "2026-02-08T08:21:24.156802",
+    "version_id": "v1_baseline",
+    "version_name": "Baseline (Current)",
+    "test_case_id": "affordability_check",
+    "query": "I want to buy a second-hand car for \u20b1180,000 in cash. Can I afford it?",
+    "response": "With a cash balance of \u20b183,450, you're currently short of your \u20b1180,000 car goal. It's like trying to fill a bathtub with a teacup \u2013 you'll need a bigger pour! You can't afford it yet.",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2212,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 226,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 127,
+        "text_prompt_tokens": 2212
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 4145,
+    "target_input_tokens": 2200,
+    "target_output_tokens": 100,
+    "word_count": 35
+  },
+  {
+    "timestamp": "2026-02-08T08:21:27.018887",
+    "version_id": "v1_baseline",
+    "version_name": "Baseline (Current)",
+    "test_case_id": "balance_inquiry",
+    "query": "What's my total balance across all wallets?",
+    "response": "Your total balance across all wallets is $163,099.00. That's a healthy financial cushion, but remember, a nimble squirrel always keeps an eye on their nuts! Keep saving wisely.",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2166,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 105,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 37,
+        "text_prompt_tokens": 2166
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 2855,
+    "target_input_tokens": 2200,
+    "target_output_tokens": 100,
+    "word_count": 28
+  },
+  {
+    "timestamp": "2026-02-08T08:21:33.988584",
+    "version_id": "v1_baseline",
+    "version_name": "Baseline (Current)",
+    "test_case_id": "budget_advice",
+    "query": "Should I use my credit card or debit for groceries?",
+    "response": "Ah, the age-old dilemma of plastic! For your \"Groceries & Mart\" haul, definitely whip out your Amore Cashback card. It doles out a sweet 5% cashback, turning everyday necessities into a little financial bonus. Just remember to pay that bill in full to avoid interest charges \u2013 we don't want those gains to become a financial tightrope walk!",
+    "tools_used": [
+      "run_sql_query",
+      "run_sql_query",
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 4777,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 1340,
+      "output_tokens": 662,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 446,
+        "text_prompt_tokens": 4777,
+        "cached_content_tokens": 1340,
+        "text_cache_tokens": 1340
+      },
+      "requests": 4,
+      "tool_calls": 3
+    },
+    "latency_ms": 6967,
+    "target_input_tokens": 2200,
+    "target_output_tokens": 100,
+    "word_count": 58
+  },
+  {
+    "timestamp": "2026-02-08T08:21:38.284155",
+    "version_id": "v2_concise",
+    "version_name": "Concise & Direct",
+    "test_case_id": "affordability_check",
+    "query": "I want to buy a second-hand car for \u20b1180,000 in cash. Can I afford it?",
+    "response": "You're eyeing a \u20b1180,000 second-hand car, but it seems your cash reserves are currently at zero. Buying a car without cash would mean traversing a bumpy road with high-interest loans, potentially leading to a debt spiral. It's wiser to save up first!",
+    "tools_used": [
+      "run_sql_query",
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 3394,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 2120,
+      "output_tokens": 342,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 2120,
+        "thoughts_tokens": 214,
+        "text_prompt_tokens": 3394,
+        "text_cache_tokens": 2120
+      },
+      "requests": 3,
+      "tool_calls": 2
+    },
+    "latency_ms": 4293,
+    "target_input_tokens": 2000,
+    "target_output_tokens": 50,
+    "word_count": 42
+  },
+  {
+    "timestamp": "2026-02-08T08:21:41.255662",
+    "version_id": "v2_concise",
+    "version_name": "Concise & Direct",
+    "test_case_id": "balance_inquiry",
+    "query": "What's my total balance across all wallets?",
+    "response": "Your Wais Wallet reveals a grand total of $163,099 across all your financial vessels! A tidy sum, indeed. Remember, a well-managed balance is your financial North Star, guiding you away from the shoals of debt and towards serene savings.",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2166,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 735,
+      "output_tokens": 170,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 735,
+        "thoughts_tokens": 91,
+        "text_prompt_tokens": 2166,
+        "text_cache_tokens": 735
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 2969,
+    "target_input_tokens": 2000,
+    "target_output_tokens": 50,
+    "word_count": 39
+  },
+  {
+    "timestamp": "2026-02-08T08:21:48.424524",
+    "version_id": "v2_concise",
+    "version_name": "Concise & Direct",
+    "test_case_id": "budget_advice",
+    "query": "Should I use my credit card or debit for groceries?",
+    "response": "Ah, the age-old grocery gamble! Opt for your \"Amore Cashback (Updated)\" credit card; it's like finding money on the pavement with its 5% cashback on groceries. Just ensure you pay it off in full to avoid walking a financial tightrope with interest!",
+    "tools_used": [
+      "run_sql_query",
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 3454,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 1264,
+      "output_tokens": 733,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 560,
+        "text_prompt_tokens": 3454,
+        "cached_content_tokens": 1264,
+        "text_cache_tokens": 1264
+      },
+      "requests": 3,
+      "tool_calls": 2
+    },
+    "latency_ms": 7166,
+    "target_input_tokens": 2000,
+    "target_output_tokens": 50,
+    "word_count": 42
+  },
+  {
+    "timestamp": "2026-02-08T08:21:52.622928",
+    "version_id": "v3_balanced",
+    "version_name": "Balanced Creative",
+    "test_case_id": "affordability_check",
+    "query": "I want to buy a second-hand car for \u20b1180,000 in cash. Can I afford it?",
+    "response": "Hold your horses! Your current cash and debit balances total \u20b183,450, which means you're still \u20b196,550 short of that \u20b1180,000 car. Diving in now would be like trying to build a castle without enough bricks\u2014best to save up more to avoid a financial tightrope walk!",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2212,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 738,
+      "output_tokens": 411,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 738,
+        "thoughts_tokens": 299,
+        "text_prompt_tokens": 2212,
+        "text_cache_tokens": 738
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 4195,
+    "target_input_tokens": 2100,
+    "target_output_tokens": 65,
+    "word_count": 45
+  },
+  {
+    "timestamp": "2026-02-08T08:21:55.897677",
+    "version_id": "v3_balanced",
+    "version_name": "Balanced Creative",
+    "test_case_id": "balance_inquiry",
+    "query": "What's my total balance across all wallets?",
+    "response": "Your total balance is a tidy 163,099! A fine nest egg indeed. Keep nurturing it, and it will grow into a mighty oak of financial security. Remember, every penny saved is a future freedom earned!",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2166,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 723,
+      "output_tokens": 164,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 93,
+        "text_prompt_tokens": 2166,
+        "cached_content_tokens": 723,
+        "text_cache_tokens": 723
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 3271,
+    "target_input_tokens": 2100,
+    "target_output_tokens": 65,
+    "word_count": 35
+  },
+  {
+    "timestamp": "2026-02-08T08:22:05.732408",
+    "version_id": "v3_balanced",
+    "version_name": "Balanced Creative",
+    "test_case_id": "budget_advice",
+    "query": "Should I use my credit card or debit for groceries?",
+    "response": "When pondering plastic for provisions, consider the path of least financial resistance! While your \"Amore Cashback\" card (ID: 1) might offer enticing rewards, the real benefit blooms when you pay the full balance. Otherwise, interest charges can turn that cashback into a costly mirage.\n\nFor everyday essentials like groceries, if you're not absolutely sure you'll clear your credit card balance monthly, your \"Main Savings\" debit card (ID: 3) is a wise choice. It ensures you're spending only what you have, keeping your financial garden free from the weeds of debt.\n\n**Why?** Using a credit card without paying it in full is like borrowing from your future self at a premium, eroding any cashback gains. A debit card keeps your spending grounded in reality, preventing a bumpy road with high interest.",
+    "tools_used": [
+      "run_sql_query",
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 3589,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 1301,
+      "output_tokens": 1516,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 1301,
+        "thoughts_tokens": 1276,
+        "text_prompt_tokens": 3589,
+        "text_cache_tokens": 1301
+      },
+      "requests": 3,
+      "tool_calls": 2
+    },
+    "latency_ms": 9832,
+    "target_input_tokens": 2100,
+    "target_output_tokens": 65,
+    "word_count": 130
+  },
+  {
+    "timestamp": "2026-02-08T08:47:05.727381",
+    "version_id": "v1_baseline",
+    "version_name": "Baseline (Current)",
+    "test_case_id": "affordability_check",
+    "query": "I want to buy a second-hand car for \u20b1180,000 in cash. Can I afford it?",
+    "response": "Hold your horses! Your current cash stash is emptier than a forgotten piggy bank, sitting at a big fat zero. A \u20b1180,000 car purchase would send your finances tumbling down a cliff without a parachute. Let's build that cash cushion first!",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2209,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 703,
+      "output_tokens": 239,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 145,
+        "text_prompt_tokens": 2209,
+        "cached_content_tokens": 703,
+        "text_cache_tokens": 703
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 4648,
+    "target_input_tokens": 2200,
+    "target_output_tokens": 100,
+    "word_count": 41
+  },
+  {
+    "timestamp": "2026-02-08T08:47:10.412655",
+    "version_id": "v1_baseline",
+    "version_name": "Baseline (Current)",
+    "test_case_id": "balance_inquiry",
+    "query": "What's my total balance across all wallets?",
+    "response": "Your total financial well-being, a true treasure chest, stands at a robust $163,099! Keep nurturing those funds; every penny saved is a future freedom earned, allowing your financial garden to flourish without unexpected weeds.",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2166,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 723,
+      "output_tokens": 144,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 72,
+        "text_prompt_tokens": 2166,
+        "cached_content_tokens": 723,
+        "text_cache_tokens": 723
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 4681,
+    "target_input_tokens": 2200,
+    "target_output_tokens": 100,
+    "word_count": 34
+  },
+  {
+    "timestamp": "2026-02-08T08:47:14.414785",
+    "version_id": "v1_baseline",
+    "version_name": "Baseline (Current)",
+    "test_case_id": "budget_advice",
+    "query": "Should I use my credit card or debit for groceries?",
+    "response": "Ah, the age-old grocery dilemma! Use your credit card if it offers delightful cashback on groceries, but *only* if you pay the full balance monthly. Otherwise, it's a bumpy road with high interest. Debit keeps your budget grounded, avoiding any debt spirals. Choose wisely!",
+    "tools_used": [],
+    "usage": {
+      "input_tokens": 1057,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 625,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 566,
+        "text_prompt_tokens": 1057
+      },
+      "requests": 1,
+      "tool_calls": 0
+    },
+    "latency_ms": 3999,
+    "target_input_tokens": 2200,
+    "target_output_tokens": 100,
+    "word_count": 44
+  },
+  {
+    "timestamp": "2026-02-08T08:47:19.418791",
+    "version_id": "v2_concise",
+    "version_name": "Concise & Direct",
+    "test_case_id": "affordability_check",
+    "query": "I want to buy a second-hand car for \u20b1180,000 in cash. Can I afford it?",
+    "response": "Hold your horses! Your current cash and debit balance is \u20b183,450, which is shy of the \u20b1180,000 needed for that car. Diving into a purchase without the full funds is like driving on fumes \u2013 you'll hit a bumpy road. Let's save more to make that car dream a smooth reality!",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2212,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 738,
+      "output_tokens": 376,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 738,
+        "thoughts_tokens": 265,
+        "text_prompt_tokens": 2212,
+        "text_cache_tokens": 738
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 5001,
+    "target_input_tokens": 2000,
+    "target_output_tokens": 50,
+    "word_count": 51
+  },
+  {
+    "timestamp": "2026-02-08T08:47:22.415184",
+    "version_id": "v2_concise",
+    "version_name": "Concise & Direct",
+    "test_case_id": "balance_inquiry",
+    "query": "What's my total balance across all wallets?",
+    "response": "Your total balance across all wallets is $3801. Keep building that financial fortress \u2013 every penny saved is a brick!",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2179,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 722,
+      "output_tokens": 102,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "thoughts_tokens": 37,
+        "text_prompt_tokens": 2179,
+        "cached_content_tokens": 722,
+        "text_cache_tokens": 722
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 2993,
+    "target_input_tokens": 2000,
+    "target_output_tokens": 50,
+    "word_count": 20
+  },
+  {
+    "timestamp": "2026-02-08T08:47:35.197957",
+    "version_id": "v2_concise",
+    "version_name": "Concise & Direct",
+    "test_case_id": "budget_advice",
+    "query": "Should I use my credit card or debit for groceries?",
+    "response": "Ah, the age-old grocery dilemma! Your Amore Cashback credit card offers a stellar 5% cashback on groceries\u2014a sweet win for your wallet! But remember, a credit card is a financial tightrope; pay it off immediately to avoid the bumpy road of interest. Otherwise, use your debit to stay grounded!",
+    "tools_used": [
+      "run_sql_query",
+      "run_sql_query",
+      "run_sql_query",
+      "run_sql_query",
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 7648,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 1935,
+      "output_tokens": 1481,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 1935,
+        "thoughts_tokens": 1139,
+        "text_prompt_tokens": 7648,
+        "text_cache_tokens": 1935
+      },
+      "requests": 6,
+      "tool_calls": 5
+    },
+    "latency_ms": 12779,
+    "target_input_tokens": 2000,
+    "target_output_tokens": 50,
+    "word_count": 49
+  },
+  {
+    "timestamp": "2026-02-08T08:47:38.880145",
+    "version_id": "v3_balanced",
+    "version_name": "Balanced Creative",
+    "test_case_id": "affordability_check",
+    "query": "I want to buy a second-hand car for \u20b1180,000 in cash. Can I afford it?",
+    "response": "Hold your horses! Your current cash and debit balance is \u20b183,450. A \u20b1180,000 car is like reaching for a star with a step stool; it's a bit out of grasp for now. Buying it would leave your wallet feeling lighter than a feather, which isn't ideal for a smooth financial ride.",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2212,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 738,
+      "output_tokens": 301,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 738,
+        "thoughts_tokens": 189,
+        "text_prompt_tokens": 2212,
+        "text_cache_tokens": 738
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 3679,
+    "target_input_tokens": 2100,
+    "target_output_tokens": 65,
+    "word_count": 51
+  },
+  {
+    "timestamp": "2026-02-08T08:47:41.831032",
+    "version_id": "v3_balanced",
+    "version_name": "Balanced Creative",
+    "test_case_id": "balance_inquiry",
+    "query": "What's my total balance across all wallets?",
+    "response": "Your total net balance across all wallets is $3801. Keep building that financial fortress, brick by frugal brick!",
+    "tools_used": [
+      "run_sql_query"
+    ],
+    "usage": {
+      "input_tokens": 2201,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 735,
+      "output_tokens": 194,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 735,
+        "thoughts_tokens": 108,
+        "text_prompt_tokens": 2201,
+        "text_cache_tokens": 735
+      },
+      "requests": 2,
+      "tool_calls": 1
+    },
+    "latency_ms": 2948,
+    "target_input_tokens": 2100,
+    "target_output_tokens": 65,
+    "word_count": 18
+  },
+  {
+    "timestamp": "2026-02-08T08:47:45.274085",
+    "version_id": "v3_balanced",
+    "version_name": "Balanced Creative",
+    "test_case_id": "budget_advice",
+    "query": "Should I use my credit card or debit for groceries?",
+    "response": "Ah, the classic pantry predicament! A credit card *can* be a reward-rich path for groceries, but only if you pay it off *in full, immediately*. Otherwise, you're on a bumpy road with high interest, making those carrots costly. For true peace of mind and no debt tightrope, your debit card is the frugal champion!",
+    "tools_used": [],
+    "usage": {
+      "input_tokens": 1057,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 735,
+      "output_tokens": 462,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "cached_content_tokens": 735,
+        "thoughts_tokens": 390,
+        "text_prompt_tokens": 1057,
+        "text_cache_tokens": 735
+      },
+      "requests": 1,
+      "tool_calls": 0
+    },
+    "latency_ms": 3440,
+    "target_input_tokens": 2100,
+    "target_output_tokens": 65,
+    "word_count": 54
+  }
+]

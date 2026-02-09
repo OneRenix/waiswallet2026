@@ -53,6 +53,16 @@ export const api = {
         return res.json();
     },
 
+    async updateGoal(goalId: number, goalData: any) {
+        const res = await fetch(`${API_BASE}/api/goals/${goalId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(goalData)
+        });
+        if (!res.ok) throw new Error("Failed to update goal");
+        return res.json();
+    },
+
     async updateTransaction(txId: number, txData: any) {
         const res = await fetch(`${API_BASE}/api/transactions/${txId}`, {
             method: 'PUT',
@@ -80,8 +90,20 @@ export const api = {
     },
 
     async chat(query: string, context: any) {
-        const res = await fetch(`${API_BASE}/chat/?query=${encodeURIComponent(query)}`, {
-            method: 'POST'
+        // Generate or retrieve session ID (simple client-side ID for now)
+        let sessionId = localStorage.getItem('wais_session_id');
+        if (!sessionId) {
+            sessionId = 'web_' + Math.random().toString(36).substring(2, 10);
+            localStorage.setItem('wais_session_id', sessionId);
+        }
+
+        const res = await fetch(`${API_BASE}/chat/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: query,
+                session_id: sessionId
+            })
         });
         if (!res.ok) throw new Error("Chat failed");
         return res.json();

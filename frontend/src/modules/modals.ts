@@ -207,14 +207,22 @@ export const initModals = () => {
     // --- Goal Modal ---
     $('#form-goal').off('submit').on('submit', async (e: any) => {
         e.preventDefault();
+        const id = $('#goal-id').val();
         const goalData = {
             name: $('#goal-name').val(),
             target_amount: parseFloat($('#goal-target').val()),
-            current_amount: parseFloat($('#goal-current').val())
+            current_amount: parseFloat($('#goal-current').val()),
+            color: $('#goal-color').val() || 'bg-emerald-500',
+            icon: 'target', // Default icon
+            source_id: $('#goal-source').val() ? parseInt($('#goal-source').val()) : null
         };
 
         try {
-            await api.createGoal(goalData);
+            if (id) {
+                await api.updateGoal(parseInt(id), goalData);
+            } else {
+                await api.createGoal(goalData);
+            }
             await state.refresh();
             $('#modal-goal').addClass('hidden').removeClass('flex');
             $view.render();
@@ -270,7 +278,23 @@ export const initModals = () => {
         $chatBox.scrollTop($chatBox[0].scrollHeight);
 
         try {
-            $chatBox.append(`<div id="msg-loading" class="text-xs text-slate-400 italic">Pilot is thinking...</div>`);
+            $chatBox.append(`
+                <div id="msg-loading" class="flex flex-col items-start p-4 animate-pulse">
+                    <div class="flex items-center gap-3 bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm">
+                        <div class="relative flex items-center justify-center">
+                             <i data-lucide="bot" class="w-6 h-6 text-blue-600 animate-bounce"></i>
+                             <div class="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-ping"></div>
+                        </div>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                        <span class="text-xs font-bold text-slate-500">Thinking...</span>
+                    </div>
+                </div>
+            `);
+            lucide.createIcons();
             const data = await api.chat(msg, {});
             $('#msg-loading').remove();
             $chatBox.append(`

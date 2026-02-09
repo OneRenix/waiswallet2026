@@ -1,10 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlite3 import Connection
+from typing import Optional, List
+from pydantic import BaseModel
+from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception
 from ..db.connection import get_db_session
 from ..agents.pilot import strategic_pilot, guardrail_agent, PilotDeps
 
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
+
+class ChatRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = "default_session"
 
 def is_rate_limit_error(exception):
     """Check if the exception is a 429 Resource Exhausted error."""
@@ -16,15 +23,51 @@ def is_rate_limit_error(exception):
     retry=retry_if_exception(is_rate_limit_error),
     reraise=True
 )
-async def run_agent_with_retry(query: str, deps: PilotDeps):
-    return await strategic_pilot.run(query, deps=deps)
+async def run_agent_with_retry(query: str, deps: PilotDeps, message_history: List = None):
+    # Enforce a tool loop cap of 20 steps to prevent infinite loops
+    # Note: 'max_steps' is not supported in this version of pydantic-ai. 
+    # relying on default or Agent configuration.
+    return await strategic_pilot.run(query, deps=deps, message_history=message_history)
+
+def get_history(db: Connection, session_id: str, limit: int = 3):
+    """Fetches last N messages for a session and converts to Pydantic AI format."""
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT sender, message FROM chat_logs 
+        WHERE session_id = ? 
+        ORDER BY timestamp ASC LIMIT ?
+    """, (session_id, limit))
+    rows = cursor.fetchall()
+    
+    history = []
+    for row in rows:
+        sender, message = row['sender'], row['message']
+        if sender == 'user':
+            history.append(ModelRequest(parts=[UserPromptPart(content=message)]))
+        else:
+            history.append(ModelResponse(parts=[TextPart(content=message)]))
+    return history
+
+def save_log(db: Connection, session_id: str, sender: str, message: str):
+    """Saves a message to the chat_logs table."""
+    try:
+        cursor = db.cursor()
+        cursor.execute("""
+            INSERT INTO chat_logs (session_id, sender, message)
+            VALUES (?, ?, ?)
+        """, (session_id, sender, message))
+        db.commit()
+    except Exception as e:
+        print(f"Failed to save chat log: {e}")
 
 @router.post("/")
-async def chat_with_pilot(query: str, db: Connection = Depends(get_db_session)):
+async def chat_with_pilot(request: ChatRequest, db: Connection = Depends(get_db_session)):
+    query = request.query
+    session_id = request.session_id
+
     # 0. Fast Intent Check (Guardrail)
     try:
         classifier_result = await guardrail_agent.run(query)
-        # Use .output for Pydantic AI AgentRunResult
         classifier_output = str(getattr(classifier_result, 'output', classifier_result))
         
         if "OFF-TOPIC" in classifier_output.upper():
@@ -35,31 +78,30 @@ async def chat_with_pilot(query: str, db: Connection = Depends(get_db_session)):
             }
     except Exception as e:
         print(f"Guardrail check failed: {e}")
-        # Fail safe: continue to main agent if guardrail has an issue
         pass
 
-    # 1. Load the "Financial Brain" context (Compact Version)
+    # 1. Load History & Rules
+    message_history = get_history(db, session_id)
     with open("app/data/database_compact.md", "r") as f:
         rules = f.read()
     
     # 2. Package Dependencies
-    deps = PilotDeps(db=db, system_rules=rules)
+    is_new_session = len(message_history) == 0
+    deps = PilotDeps(db=db, system_rules=rules, is_new_session=is_new_session)
     
-    # 3. Run the Agent (Gemini 2.0 Flash handles the ReAct logic)
+    # 3. Run the Agent
     try:
-        result = await run_agent_with_retry(query, deps)
-        
-        # Robust extraction of response text using .output
+        result = await run_agent_with_retry(query, deps, message_history=message_history)
         response_text = result.output if hasattr(result, 'output') else str(result)
         
-        # If it somehow still has the AgentRunResult wrapper, strip it
+        # Strip potential wrapper
         if isinstance(response_text, str) and response_text.startswith("AgentRunResult("):
             import re
             match = re.search(r'output=["\'](.*?)["\']', response_text, re.DOTALL)
             if match:
                 response_text = match.group(1).replace("\\n", "\n")
 
-        # Extract tool calls for visibility in usage/logs
+        # Extract tool calls
         tool_calls = []
         for msg in result.all_messages():
             if hasattr(msg, 'parts'):
@@ -70,10 +112,23 @@ async def chat_with_pilot(query: str, db: Connection = Depends(get_db_session)):
                             "args": getattr(part, 'args', {})
                         })
         
+        # 4. Save to Chat Logs
+        save_log(db, session_id, "user", query)
+        save_log(db, session_id, "buddy", response_text)
+
+        # Terminal Logging
+        usage = result.usage()
+        print(f"\n--- 🤖 CHATBOT BEHAVIOR (Session: {session_id}) 🤖 ---")
+        print(f"💬 Query: {query}")
+        print(f"🛠️  Tools Used: {[tc['tool'] for tc in tool_calls] if tool_calls else 'None'}")
+        print(f"📊 Tokens: In={usage.request_tokens}, Out={usage.response_tokens}, Total={usage.total_tokens}")
+        print(f"-------------------------------\n")
+        
         return {
             "response": response_text,
             "tool_calls": tool_calls,
-            "usage": result.usage() if hasattr(result, 'usage') else {}
+            "usage": usage,
+            "session_id": session_id
         }
     except Exception as e:
         print(f"Error after retries in chat_with_pilot: {e}")

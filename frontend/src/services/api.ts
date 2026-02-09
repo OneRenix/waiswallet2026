@@ -143,5 +143,22 @@ export const api = {
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch providers");
         return res.json();
+    },
+
+    async runSimulation(data: any) {
+        const res = await fetch(`${API_BASE}/api/simulate/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: data.amount,
+                category: data.category,
+                card_id: data.card_id,
+                payment_type: data.payment_type,
+                term: data.term,
+                description: data.description
+            })
+        });
+        if (!res.ok) throw new Error("Simulation failed");
+        return res.json();
     }
 };

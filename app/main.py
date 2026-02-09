@@ -1,28 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
-from .routers import chat, api
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .routers import api, chat, simulation
 
-app = FastAPI(title="WaisWallet")
+app = FastAPI(title="WaisWallet API")
 
-# Serve frontend build if it exists
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend/dist")
-if os.path.exists(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-
-# Enable CORS for frontend development
+# Setup CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, specify the actual frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(chat.router)
 app.include_router(api.router)
+app.include_router(chat.router)
+app.include_router(simulation.router)
 
 @app.get("/")
 def health_check():

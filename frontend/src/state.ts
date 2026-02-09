@@ -27,7 +27,7 @@ export const state = {
     ],
     simData: {
         amount: '', cardId: 1, category: 'shopping', paymentType: 'straight',
-        installments: '3', urgency: 'now', goalId: ''
+        installments: '3', urgency: 'now', goalId: '', description: ''
     },
 
     async refresh() {

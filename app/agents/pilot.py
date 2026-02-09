@@ -1,20 +1,37 @@
 from pydantic_ai import Agent, RunContext
+import os
 from pydantic_ai.models.google import GoogleModel, GoogleModelSettings
 from .dependencies import (
     PilotDeps, run_sql_query, get_table_schema, add_transaction, add_recommendation
 )
 from .prompt_versions import get_prompt
 
-# Initialize the Google Gemini 2.0 Flash Model
-model_main = GoogleModel('gemini-2.5-flash',
+from dotenv import load_dotenv
+
+from pydantic_ai.providers.google import GoogleProvider
+
+# Load environment variables early
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
+
+if api_key:
+    print(f"API Key Diagnostic: Initializing provider with key starting with {api_key[:4]}...")
+    provider = GoogleProvider(api_key=api_key)
+else:
+    provider = 'google-gla' # Fallback to default behavior
+
+# Initialize the Google Gemini 2.0 Flash Model (Lite for speed)
+model_main = GoogleModel('gemini-2.0-flash-lite',
+    provider=provider,
     settings=GoogleModelSettings(
         google_thinking_config={'thinking_budget': 2048}, # The "Wais" reasoning limit
         temperature=0.1, # Keep it deterministic for SQL generation
         max_tokens=4096   # Enforce your <50 words constraint
     )
 )
-model_guardrails = GoogleModel('gemini-2.0-flash-lite')
+model_guardrails = GoogleModel('gemini-2.0-flash-lite', provider=provider)
 model_sql = GoogleModel('gemini-2.0-flash-lite',
+    provider=provider,
     settings=GoogleModelSettings(temperature=0.0) # Strict SQL generation
 )
 
